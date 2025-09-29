@@ -1,0 +1,67 @@
+main.go
+github-activity
+task-tracker
+
+# ========================
+# Go build artifacts
+# ========================
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+!backend/cmd/server/main.go
+# Go workspace
+*.log
+*.tmp
+*.cache
+docs
+
+# Build output
+bin/
+build/
+dist/
+tmp/
+
+# ========================
+# Dependency management
+# ========================
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# ========================
+# Docker / Deploy
+# ========================
+.docker/
+.output
+.vercel
+.netlify
+.wrangler
+.svelte-kit
+/build
+build
+
+# ========================
+# OS / Misc
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Env
+# ========================
+.env
+.env.*
+!.env.example
+!.env.test
+
+# ========================
+# Vite
+# ========================
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

@@ -1,0 +1,13 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "swag init -g cmd/server/main.go -o docs && go build -o main ./cmd/server"
+delay = 1000
+bin = "main"
+full_bin = "./main"
+include_ext = ["go", "tpl", "tmpl", "html"]
+exclude_dir = ["docs", "tmp", "vendor"]
+
+[log]
+time = true

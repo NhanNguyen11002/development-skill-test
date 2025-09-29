@@ -1,0 +1,141 @@
+@startuml
+hide circle
+hide methods
+hide stereotypes
+skinparam linetype ortho
+
+' =======================
+' Entities
+' =======================
+
+entity "User" as User {
+  * id : uuid
+  --
+  username : string
+  email : string
+  password : string
+  role : UserRole
+  first_name : string
+  last_name : string
+  phone : string
+  is_active : bool
+  created_at : time
+  updated_at : time
+}
+
+entity "Premise" as Premise {
+  * id : uuid
+  --
+  name : string
+  address : string
+  type : PremiseType
+  floor_plans : string
+  description : string
+  is_active : bool
+  created_at : time
+  updated_at : time
+}
+
+entity "Camera" as Camera {
+  * id : uuid
+  --
+  name : string
+  location : string
+  stream_url : string
+  status : CameraStatus
+  premise_id : uuid
+  created_at : time
+  updated_at : time
+}
+
+entity "Alert" as Alert {
+  * id : uuid
+  --
+  type : AlertType
+  severity : AlertSeverity
+  title : string
+  description : string
+  location : string
+  status : AlertStatus
+  camera_id : uuid?
+  premise_id : uuid
+  assigned_guard_id : uuid?
+  created_at : time
+  updated_at : time
+}
+
+entity "Incident" as Incident {
+  * id : uuid
+  --
+  alert_id : uuid
+  status : IncidentStatus
+  location : string
+  description : string
+  assigned_guard_id : uuid
+  created_at : time
+  updated_at : time
+}
+
+entity "IncidentUpdate" as IncidentUpdate {
+  * id : uuid
+  --
+  incident_id : uuid
+  guard_id : uuid
+  type : UpdateType
+  message : string
+  media_urls : text[]
+  location : string
+  created_at : time
+}
+
+entity "CameraGuard" as CameraGuard {
+  * camera_id : uuid
+  * guard_id  : uuid
+  --
+  created_at : time
+}
+
+entity "IncidentGuard" as IncidentGuard {
+  * incident_id : uuid
+  * guard_id    : uuid
+  --
+  created_at : time
+}
+
+' =======================
+' Relationships
+' =======================
+
+' Premise - Camera
+Premise ||--o{ Camera : "has"
+
+' Premise - Alert
+Premise ||--o{ Alert : "has"
+
+' Camera - Alert
+Camera ||--o{ Alert : "generates"
+
+' Alert - Incident
+Alert ||--|| Incident : "leads to"
+
+' Incident - IncidentUpdate
+Incident ||--o{ IncidentUpdate : "has"
+
+' User - IncidentUpdate
+User ||--o{ IncidentUpdate : "writes update"
+
+' User - Camera (via CameraGuard)
+User ||--o{ CameraGuard
+Camera ||--o{ CameraGuard
+
+' User - Incident (via IncidentGuard)
+User ||--o{ IncidentGuard
+Incident ||--o{ IncidentGuard
+
+' User - Alert (assigned_guard_id)
+User ||--o{ Alert : "assigned"
+
+' User - Incident (assigned_guard_id)
+User ||--o{ Incident : "assigned"
+
+@enduml
