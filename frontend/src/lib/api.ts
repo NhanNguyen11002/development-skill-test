@@ -1,3 +1,4 @@
+import { PUBLIC_API_URL } from '$env/static/public';
 import type { 
   User, 
   Premise, 
@@ -11,8 +12,6 @@ import type {
   StreamResponse,
   ApiResponse
 } from './types';
-
-const API_BASE_URL = 'http://localhost:8081/api';
 
 class ApiClient {
   private token: string | null = null;
@@ -42,7 +41,7 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${PUBLIC_API_URL}${endpoint}`;
     const token = this.getToken();
 
     const config: RequestInit = {
