@@ -19,6 +19,7 @@ task-tracker
 *.tmp
 *.cache
 docs
+# backend/main
 
 # Build output
 bin/
@@ -65,3 +66,4 @@ Thumbs.db
 # ========================
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+

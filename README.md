@@ -57,7 +57,9 @@ smart-city-surveillance/
 │   ├── pkg/                 # Reusable packages
 │   │   ├── websocket/       # WebSocket implementation
 │   │   ├── kafka/           # Kafka integration
+│   │   ├── response/        # Response share lib
 │   │   └── redis/           # Redis caching
+│   ├── uml/                 # Diagram folder
 │   ├── Dockerfile           # Backend containerization
 │   └── docker-compose.yml   # Backend services orchestration
 ├── frontend/                # SvelteKit 5 frontend application
@@ -92,10 +94,12 @@ cd smart-city-surveillance
 
 # Start backend services
 cd backend
+make up 
+OR 
 docker-compose up -d
 
 # Start frontend development server
-cd ../frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -125,6 +129,8 @@ cp .env.example .env
 
 4. Run with Docker Compose:
 ```bash
+make up
+OR
 docker-compose up -d
 ```
 
@@ -140,7 +146,12 @@ cd frontend
 npm install
 ```
 
-3. Run development server:
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+4. Run development server:
 ```bash
 npm run dev
 ```
@@ -149,97 +160,8 @@ The frontend will be available at `http://localhost:5173`
 
 ## 🔧 API Documentation
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Get current user
+- Go to http://localhost:8081/swagger/index.html after start backend container for more info
 
-### Premises & Cameras
-- `GET /api/premises` - List all premises
-- `GET /api/premises/:id/cameras` - Get cameras for premise
-- `GET /api/cameras/:id/stream` - Get camera stream URL
-
-### Alerts
-- `GET /api/alerts` - List alerts
-- `POST /api/alerts/:id/acknowledge` - Acknowledge alert
-- `POST /api/alerts/:id/assign` - Assign alert to security guard
-
-### Security Guards
-- `GET /api/guards` - List security guards
-- `POST /api/guards/:id/dispatch` - Dispatch guard to incident
-- `GET /api/guards/me/incidents` - Get assigned incidents
-
-### WebSocket Events
-- `alert.created` - New alert notification
-- `guard.dispatched` - Guard dispatch notification
-- `incident.updated` - Incident status update
-
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd backend
-go test ./... -v
-go test ./... -cover
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm run check
-npm run lint
-```
-
-## 🐳 Deployment
-
-### Backend Docker Deployment
-```bash
-cd backend
-docker-compose up -d --build
-```
-
-### Frontend Docker Deployment
-```bash
-cd frontend
-docker build -t smart-city-frontend .
-docker run -p 3000:3000 smart-city-frontend
-```
-
-### Full Stack Deployment
-```bash
-# From project root
-docker-compose -f backend/docker-compose.yml up -d
-cd frontend && docker build -t smart-city-frontend . && docker run -p 3000:3000 smart-city-frontend
-```
-
-### Kubernetes Deployment
-```bash
-kubectl apply -f k8s/
-```
-
-## 📊 Performance Optimizations
-
-- **Caching**: Redis for session and data caching
-- **Database**: Connection pooling and indexing
-- **Concurrency**: Goroutines for async operations
-- **Load Balancing**: Multiple backend instances
-- **CDN**: Static asset delivery
-
-## 🔒 Security Features
-
-- JWT-based authentication
-- Role-based access control
-- Input validation and sanitization
-- CORS configuration
-- Rate limiting
-- HTTPS enforcement
-
-## 📱 Mobile Responsiveness
-
-The frontend is fully responsive and optimized for:
-- Desktop (1920x1080+)
-- Tablet (768x1024)
-- Mobile (375x667)
 
 ## 🎨 UI Components
 
@@ -249,36 +171,6 @@ The frontend uses shadcn-svelte components including:
 - Dialogs, Sheets, Tabs
 - Avatars, Dropdown Menus
 - And more...
-
-## 🚨 Alert System
-
-The system supports various alert types:
-- Unauthorized access attempts
-- Suspicious activities
-- Equipment damage
-- System failures
-
-## 📞 Real-time Communication
-
-- WebSocket for instant notifications
-- Kafka for reliable message delivery
-- Push notifications for mobile app
-- Email notifications for critical alerts
-
-## 🔄 Development Workflow
-
-1. Feature branches from `main`
-2. Code review required
-3. Automated testing on PR
-4. Staging deployment
-5. Production deployment
-
-## 📈 Monitoring & Logging
-
-- Application metrics with Prometheus
-- Log aggregation with ELK stack
-- Health check endpoints
-- Performance monitoring
 
 ## 🤝 Contributing
 
