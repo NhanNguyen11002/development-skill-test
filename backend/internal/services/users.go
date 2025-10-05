@@ -48,10 +48,17 @@ func (s *userService) GetByAssignedIncidentID(ctx context.Context, incidentID st
 	if userRole != models.RoleSCSOperator {
 		return nil, errors.New("permission denied")
 	}
+
 	var users []models.User
 	err := s.db.WithContext(ctx).
-		Joins("JOIN incident_guards ON users.id = incident_guards.guard_id").
-		Where("incident_guards.incident_id = ?", incidentID).
+		Model(&models.User{}).
+		Joins("JOIN incident_guards ig ON ig.guard_id = users.id").
+		Where("ig.incident_id = ?", incidentID).
 		Find(&users).Error
-	return users, err
-} 
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

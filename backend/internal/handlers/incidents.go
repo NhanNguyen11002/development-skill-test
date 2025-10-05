@@ -118,7 +118,7 @@ func (h *IncidentHandler) UpdateIncident(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Incident ID"
-// @Param payload body models.IncidentUpdate true "Update payload"
+// @Param payload body dto.AddIncidentUpdateRequest true "Update payload"
 // @Success 201 {object} models.IncidentUpdate
 // @Failure 400 {object} response.ApiResponse
 // @Failure 403 {object} response.ApiResponse

@@ -1,10 +1,10 @@
 package dto
 
 type AssignAlertRequest struct {
-	GuardID string `json:"guard_id" binding:"required"`
+	GuardID []string `json:"guard_id" binding:"required"`
 }
 type UpdateAlertStatusRequest struct {
-	Status string `json:"status" binding:"required,oneof=open in_progress resolved closed"`
+	Status string `json:"status" binding:"required,oneof=pending acknowledged assigned resolved closed"`
 
 }
 

@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"smart-city-surveillance/internal/models"
 	"smart-city-surveillance/pkg/websocket"
@@ -15,7 +17,7 @@ type AlertsService interface {
 	GetAlerts(ctx context.Context, filters AlertsFilter, userRole models.UserRole, userID string) ([]models.Alert, error)
 	GetAlert(ctx context.Context, id string, userRole models.UserRole, userID string) (*models.Alert, error)
 	AcknowledgeAlert(ctx context.Context, id string, userRole models.UserRole) (*models.Alert, error)
-	AssignAlert(ctx context.Context, id string, guardID string) (*models.Alert, *models.Incident, error)
+	AssignAlert(ctx context.Context, id string, guardID []string) (*models.Alert, *models.Incident, error)
 	CreateAlert(ctx context.Context, alert models.Alert) (*models.Alert, error)
 	UpdateAlert(ctx context.Context, id string, status models.AlertStatus) (*models.Alert, error)
 }
@@ -104,59 +106,82 @@ func (s *alertsService) AcknowledgeAlert(ctx context.Context, id string, userRol
 	return &alert, nil
 }
 
-func (s *alertsService) AssignAlert(ctx context.Context, id string, guardID string) (*models.Alert, *models.Incident, error) {
+func (s *alertsService) AssignAlert(ctx context.Context, id string, guardIDs []string) (*models.Alert, *models.Incident, error) {
 	alertUUID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, nil, err
-	}
-	guardUUID, err := uuid.Parse(guardID)
-	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("invalid alert id: %w", err)
 	}
 
+	// Lấy alert
 	var alert models.Alert
 	if err := s.db.WithContext(ctx).First(&alert, "id = ?", alertUUID).Error; err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("alert not found: %w", err)
 	}
 
-	var guard models.User
-	if err := s.db.WithContext(ctx).First(&guard, "id = ? AND role = ?", guardUUID, models.RoleSecurityGuard).Error; err != nil {
-		return nil, nil, err
+	// Validate guard IDs
+	if len(guardIDs) == 0 {
+		return nil, nil, errors.New("no guard IDs provided")
 	}
 
-	alert.AssignedGuardID = &guardUUID
-	alert.Status = models.AlertStatusAssigned
+	var guards []models.User
+	if err := s.db.WithContext(ctx).
+		Where("id IN ? AND role = ?", guardIDs, models.RoleSecurityGuard).
+		Find(&guards).Error; err != nil {
+		return nil, nil, fmt.Errorf("failed to find guards: %w", err)
+	}
+	if len(guards) == 0 {
+		return nil, nil, errors.New("no valid guards found")
+	}
 
+	// Tạo incident
 	incident := models.Incident{
-		AlertID:         alertUUID,
-		Status:          models.IncidentStatusOpen,
-		AssignedGuardID: guardUUID,
-		Location:        alert.Location,
-		Description:     alert.Description,
+		AlertID:     alertUUID,
+		Status:      models.IncidentStatusOpen,
+		Location:    alert.Location,
+		Description: alert.Description,
 	}
 	if err := s.db.WithContext(ctx).Create(&incident).Error; err != nil {
-		return nil, nil, err
-	}
-	if err := s.db.WithContext(ctx).Save(&alert).Error; err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to create incident: %w", err)
 	}
 
-	s.wsHub.SendToUser(guardUUID.String(), "guard_dispatched", map[string]any{
-		"alert_id":    alert.ID,
-		"incident_id": incident.ID,
-		"title":       alert.Title,
-		"description": alert.Description,
-		"location":    alert.Location,
-		"severity":    alert.Severity,
-	})
+	// Cập nhật alert status
+	alert.Status = models.AlertStatusAssigned
+	if err := s.db.WithContext(ctx).Save(&alert).Error; err != nil {
+		return nil, nil, fmt.Errorf("failed to update alert: %w", err)
+	}
+
+	// Insert nhiều incident_guards
+	var incidentGuards []models.IncidentGuard
+	for _, g := range guards {
+		incidentGuards = append(incidentGuards, models.IncidentGuard{
+			IncidentID: incident.ID,
+			GuardID:    g.ID,
+		})
+	}
+	if err := s.db.WithContext(ctx).Create(&incidentGuards).Error; err != nil {
+		return nil, nil, fmt.Errorf("failed to assign guards: %w", err)
+	}
+
+	// Gửi notification
+	for _, g := range guards {
+		s.wsHub.SendToUser(g.ID.String(), "guard_dispatched", map[string]any{
+			"alert_id":    alert.ID,
+			"incident_id": incident.ID,
+			"title":       alert.Title,
+			"description": alert.Description,
+			"location":    alert.Location,
+			"severity":    alert.Severity,
+		})
+	}
 	s.wsHub.BroadcastToRole("scs_operator", "alert_assigned", map[string]any{
 		"alert_id":    alert.ID,
 		"incident_id": incident.ID,
-		"guard_name":  guard.FirstName + " " + guard.LastName,
+		"guards":      guards,
 	})
 
 	return &alert, &incident, nil
 }
+
 
 func (s *alertsService) CreateAlert(ctx context.Context, alert models.Alert) (*models.Alert, error) {
 	alert.Status = models.AlertStatusPending

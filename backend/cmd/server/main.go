@@ -159,6 +159,7 @@ func main() {
 					incidents.PUT("/:id", incidentHandler.UpdateIncident)
 					incidents.POST("/:id/updates", incidentHandler.AddIncidentUpdate)
 				}
+				
 
 						// Users routes
 				users := protected.Group("/users")

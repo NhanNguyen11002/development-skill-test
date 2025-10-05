@@ -143,13 +143,11 @@ type Incident struct {
 	Status         IncidentStatus `json:"status" gorm:"default:'open'"`
 	Location       string         `json:"location" gorm:"not null"`
 	Description    string         `json:"description"`
-	AssignedGuardID uuid.UUID     `json:"assigned_guard_id" gorm:"type:uuid"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
 
 	// Relationships
 	Alert          Alert            `json:"alert,omitempty" gorm:"foreignKey:AlertID;references:ID"`
-	AssignedGuard  User             `json:"assigned_guard,omitempty" gorm:"foreignKey:AssignedGuardID;references:ID"`
 	AssignedGuards []User           `json:"assigned_guards,omitempty" gorm:"many2many:incident_guards;joinForeignKey:IncidentID;JoinReferences:GuardID"`
 	Updates        []IncidentUpdate `json:"updates,omitempty" gorm:"foreignKey:IncidentID;references:ID"`
 }

@@ -52,7 +52,7 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 
 // GetUsersByAssignedCamera godoc
 // @Summary Get users assigned to a camera
-// @Description Get users assigned to a specific camera (Security Guard only)
+// @Description Get users assigned to a specific camera (Operator only)
 // @Tags users
 // @Accept json
 // @Produce json
@@ -84,7 +84,7 @@ func (h *UserHandler) GetUsersByAssignedCamera(c *gin.Context) {
 
 // GetUsersByAssignedIncident godoc
 // @Summary Get users assigned to an incident
-// @Description Get users assigned to a specific incident (Security Guard only)
+// @Description Get users assigned to a specific incident (Operator only)
 // @Tags users
 // @Accept json
 // @Produce json
