@@ -20,12 +20,13 @@
     MapPin,
     Clock
   } from 'lucide-svelte';
-  import type { CameraGrid, Alert } from '$lib/types';
+  import type {  Alert, Camera as CameraType } from '$lib/types';
 
-  let cameraGrid: CameraGrid | null = null;
-  let isLoading = true;
-  let error = '';
+  let cameraGrid = $state<CameraType[]>([])
+  let isLoading = $state(true);
+  let error = $state('');
 
+  $inspect('cameraGrid', cameraGrid)
   onMount(async () => {
     await loadDashboard();
   });
@@ -35,11 +36,10 @@
     error = '';
 
     try {
-      const [gridResponse, alertsResponse] = await Promise.all([
-        api.getCameraGrid(),
-        alerts.fetchAlerts()
+      const [gridResponse] = await Promise.all([
+        api.getCameras()
       ]);
-
+      console.log('response',gridResponse )
       if (gridResponse.data) {
         cameraGrid = gridResponse.data;
       } else {
@@ -162,35 +162,27 @@
                 <span>Live Camera Feeds</span>
               </CardTitle>
               <CardDescription>
-                Real-time surveillance feeds from {$cameraGrid?.total || 0} cameras
+                Real-time surveillance feeds from {cameraGrid.length || 0} cameras
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {#if cameraGrid?.grid}
+              {#if cameraGrid.length}
                 <div class="grid grid-cols-2 gap-4 aspect-video">
-                  {#each cameraGrid.grid as row, rowIndex}
-                    {#each row as camera, colIndex}
-                      {#if camera}
-                        <div class="relative bg-gray-900 rounded-lg overflow-hidden">
-                          <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center text-white">
-                              <Camera class="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <p class="text-sm font-medium">{camera.name}</p>
-                              <p class="text-xs opacity-75">{camera.location}</p>
-                            </div>
-                          </div>
-                          <div class="absolute top-2 right-2">
-                            <Badge variant={camera.status === 'active' ? 'default' : 'secondary'}>
-                              {camera.status}
-                            </Badge>
+                  {#each cameraGrid as camera}
+                      <div class="relative bg-gray-900 rounded-lg overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                          <div class="text-center text-white">
+                            <Camera class="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p class="text-sm font-medium">{camera.name}</p>
+                            <p class="text-xs opacity-75">{camera.location}</p>
                           </div>
                         </div>
-                      {:else}
-                        <div class="bg-gray-100 rounded-lg flex items-center justify-center">
-                          <p class="text-gray-500 text-sm">No camera</p>
+                        <div class="absolute top-2 right-2">
+                          <Badge variant={camera.status === 'active' ? 'default' : 'secondary'}>
+                            {camera.status}
+                          </Badge>
                         </div>
-                      {/if}
-                    {/each}
+                      </div>
                   {/each}
                 </div>
               {:else}

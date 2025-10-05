@@ -1,4 +1,3 @@
-import { PUBLIC_API_URL } from '$env/static/public';
 import type { 
   User, 
   Premise, 
@@ -14,40 +13,16 @@ import type {
 } from './types';
 
 class ApiClient {
-  private token: string | null = null;
-
-  setToken(token: string) {
-    this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('token', token);
-    }
-  }
-
-  getToken(): string | null {
-    if (!this.token && typeof window !== 'undefined') {
-      this.token = localStorage.getItem('token');
-    }
-    return this.token;
-  }
-
-  clearToken() {
-    this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-    }
-  }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const url = `${PUBLIC_API_URL}${endpoint}`;
-    const token = this.getToken();
+    const url = `/api${endpoint}`;
 
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -58,12 +33,12 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
-        return { error: data.error || 'An error occurred' };
+        return { error: data.error || 'An error occurred', status:'failed' };
       }
 
-      return { data };
+      return { ...data};
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Network error' };
+      return { error: error instanceof Error ? error.message : 'Network error', status:'failed' };
     }
   }
 
@@ -73,11 +48,6 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
-
-    if (response.data) {
-      this.setToken(response.data.token);
-    }
-
     return response;
   }
 
@@ -85,7 +55,6 @@ class ApiClient {
     const response = await this.request<void>('/auth/logout', {
       method: 'POST',
     });
-    this.clearToken();
     return response;
   }
 
@@ -115,9 +84,6 @@ class ApiClient {
     return this.request<Camera>(`/cameras/${id}`);
   }
 
-  async getCameraGrid(): Promise<ApiResponse<CameraGrid>> {
-    return this.request<CameraGrid>('/cameras/grid');
-  }
 
   async getCameraStream(id: string): Promise<ApiResponse<StreamResponse>> {
     return this.request<StreamResponse>(`/cameras/${id}/stream`);

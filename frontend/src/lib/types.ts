@@ -115,5 +115,6 @@ export interface StreamResponse {
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
+  status: string;
   message?: string;
 } 
