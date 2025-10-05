@@ -19,7 +19,7 @@ task-tracker
 *.tmp
 *.cache
 docs
-# backend/main
+backend/main
 
 # Build output
 bin/
